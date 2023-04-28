@@ -1,0 +1,1013 @@
+ 
+ // if django is not installed
+  ====>  pip install django
+  
+//Ubuntu Loading MySQLdb module install mysqlclient?
+ ===>  sudo apt-get install -y python3-mysqld
+
+
+//Windows Loading MySQLdb module install mysqlclient?
+ ===>  pip install mysqlclient
+
+
+//Create a django Project
+ ====>   django-admin startproject student_project .
+ 
+// run a django server
+  ====>  py manage.py runserver
+ 
+//Create a django Application
+ ====>  py manage.py startapp student_app 
+  
+
+// ajout l'application au project
+
+INSTALLED_APPS = [
+   ...
+    'student_app',
+	...
+]
+
+  
+  
+ // connexion avec mysql
+  
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'school_db',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'USER': 'root',
+        'PASSWORD': '',
+    }
+}
+  
+  
+// configure the project urls in admin module
+ ====> 
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+	path('admin/', admin.site.urls),
+	path('', include('student_app.urls')),
+]
+
+
+// configure the urls in app module
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.index, name='index'),
+]
+
+
+// Hello world in views module
+====>  
+from django.shortcuts import render
+from django.http import HttpResponse
+
+def index(request):
+    return HttpResponse("Hello world!")
+	
+
+
+			
+// create and configure a html home page
+//in student_app create a templates folder in this templates create another folder called students 
+// in students folder create file called 
+
+====>
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>Hello World!</h1>
+        <h1>Bien Venues au systeme de gestion notre Ecole</h1>
+    </body>
+</html>
+
+// modifier le contenue du module views par ce code
+
+from django.http import HttpResponse
+from django.template import loader
+
+def index(request):
+  template = loader.get_template('index.html')
+  return HttpResponse(template.render())
+
+
+// basics configuration for html pages of the project create a layout.html page in templates/students paste this code in it.
+  ====> 
+  
+ <!doctype html>
+<html lang="en">
+  <head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- Bootstrap CSS -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+	<title>Student System App</title>
+	<style>
+	  body {background: #f4f6f6;}
+	</style>
+  </head>
+  <body>
+	 
+	  <br/>
+	<div class="container">
+	
+	{%block content%} {%endblock%}
+	<div/>
+	<!-- Optional JavaScript; choose one of the two! -->
+
+	<!-- Option 1: Bootstrap Bundle with Popper -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+	<!-- Option 2: Separate Popper and Bootstrap JS -->
+	<!--
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+	-->
+  </body>
+</html>
+
+// Create and config the models. Create paste these codes in model.py
+ =====>
+
+from django.db import models
+
+class ClassRoom(models.Model):
+    class_name = models.CharField('ClassRoom Name', max_length=30)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.class_name
+
+class Coures(models.Model):
+    course_name = models.CharField('Coures Name', max_length=120)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.course_name
+
+class Teacher(models.Model):
+    name = models.CharField('Name', max_length=120)
+    gender = models.CharField('Gender', max_length=20)
+    email = models.CharField('Email Address', max_length=120)
+    description = models.TextField(blank=True)
+    classRooms = models.ManyToManyField(ClassRoom, blank=False)
+    courses = models.ManyToManyField(Coures, blank=False)
+        
+    def __str__(self):
+        return self.name
+
+class Student(models.Model):
+    name = models.CharField('Name', max_length=120)
+    gender = models.CharField('Gender', max_length=20)
+    email = models.CharField('Email Address', max_length=120)
+    classRoom = models.ForeignKey(ClassRoom, blank=False, null=False, on_delete=models.CASCADE)
+    description = models.TextField(blank=True)
+    teachers = models.ManyToManyField(Teacher, blank=False)
+    courses = models.ManyToManyField(Coures, blank=False)
+        
+    def __str__(self):
+        return self.name
+
+			
+//Register models in admin module
+  ====> 
+  
+from django.contrib import admin
+from .models import ClassRoom, Coures, Teacher, Student
+
+admin.site.register(ClassRoom)
+
+admin.site.register(Coures)
+
+@admin.register(Teacher)
+class TeacherAdmin(admin.ModelAdmin):
+    list_display = ('name', 'gender', 'email', )
+    ordering = ('name', )
+    search_fields =  ('name', )
+
+
+@admin.register(Student)
+class StudentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'gender', 'email', )
+    ordering = ('name', )
+    search_fields =  ('name', )
+
+
+// make magrations
+  ====> py manage.py makemigrations
+
+// magrate
+  ====> py manage.py migrate
+ 
+// create super admin access
+  ====>  py manage.py createsuperuser
+ 
+// run a django server login to admin dashboard
+  ====>  py manage.py runserver
+  
+
+// create a header(navbar), the navigation pages. create in templates/students a file called navbar.html and paste this codes
+  ====> 
+av class="navbar navbar-expand-lg navbar-dark bg-dark">
+<div class="container-fluid">
+  <a class="navbar-brand" href="{% url 'home' %}">My Web App</a>
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+	<span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+	<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+	  <li class="nav-item">
+		<a class="nav-link" href="{% url 'home' %}">Home</a>
+	  </li>
+
+	  <li class="nav-item">
+		<a class="nav-link" href="#">Courses</a>
+	  </li>
+
+	  <li class="nav-item">
+		<a class="nav-link" href="#">Classes Room</a>
+	  </li>
+	  <li class="nav-item">
+		<a class="nav-link" href="#">Teachers</a>
+	  </li>
+	  
+	  <li class="nav-item">
+		<a class="nav-link" href="#">tudents</a>
+	  </li>
+	</ul>
+	<form class="d-flex" method="POST" action="#">
+
+		{% csrf_token %}
+	  <input class="form-control me-2" type="search" placeholder="Search Venues" name="searched" aria-label="Search">
+	  <button class="btn btn-outline-primary" type="submit">Search</button>
+	</form>
+  </div>
+</div>
+</nav>
+
+
+// create a students_list.html page in templates/students 
+	====>	
+{% extends 'students/layout.html' %}
+
+{% block content %}
+	<h1>Liste des Etudiants...</h1>
+		<table class="table table-bordered table-striped table-hover">
+		  <thead class="table-dark">
+			<tr>
+			  <th>Nom et Prenom</th>
+			  <th>Genre</th>
+			  <th>Adresse Email</th>
+			  <th>Classe</th>
+			  <th>Remarques</th>
+			</tr>
+		  </thead>
+		  <tbody>            
+			{% for student  in  students %} 
+			<tr class="success">
+			  <td>{{student.name}}</td>
+			  <td>{{student.email}}</td>
+			  <td>{{student.email}}</td>
+			  <td>{{student.classRoom.class_name}}</td>
+			  <td>{{student.description | truncatechars:20 }}</td>
+			</tr>
+			{% endfor %}
+		  </tbody>
+		</table>
+
+{% endblock %}
+
+
+//add these code in views.py module to list all students
+	 ====>  
+from .models import Student	
+
+def students_list(request):
+	students = Student.objects.all().order_by('name')
+	return render(request, 'students/students_list.html', {
+		'students': students,
+	})
+
+//add these code in student_app url and go to this link http://127.0.0.1:8000/students_list to list all students
+====>
+		
+path('students_list', views.students_list, name='students-list'),
+
+
+// create a header navbar.html page in templates/students page
+  ====> 
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'index' %}">Ecole de la Réussite</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'index' %}">Accueil</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#">Cours</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Classes</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#">Liste des Enseignants</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'students-list' %}">Liste des Etudiants</a>
+          </li>
+
+          
+        </ul>
+        <form class="d-flex" method="get" action="#">
+            {% csrf_token %}
+          <input class="form-control me-2" type="search" placeholder="Recherhcer un Etudiant" name="query" aria-label="Recherhcer">
+          <button class="btn btn-outline-primary" type="submit">Recherhcer</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+
+//modify the content of layout.html to insert the navbar
+
+<!doctype html>
+<html lang="en">
+  <head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- Bootstrap CSS -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+	<title>Student System App</title>
+	<style>
+	  body {background: #f4f6f6;}
+	</style>
+  </head>
+  <body>
+	 {% include 'students/navbar.html' %}
+	  <br/>
+	<div class="container">
+	  {% if messages %}
+		{% for message in messages %}
+		<div class="alert alert-danger alert-dismissible fade show" role="alert">
+		  <strong> {{message}}</strong>
+		  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+		</div>
+		{% endfor %}
+	  {% endif %}
+	{%block content%}
+
+	{%endblock%}
+	<div/>
+
+	<!-- Bootstrap js -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+  </body>
+</html>
+
+	
+//to add new students, create a forms.py file in student_app
+====>	
+class StudentForm(ModelForm):
+	class Meta:
+		model = Student
+		fields = ( 'name', 'genre', 'Nationnalite', '', 'description', 'teachers' , 'courses', )
+
+		labels = {
+			'matricule': '',
+			'nom':'nom et prenom', 
+			'genre': 'select genre',     
+			'nationnalite': '',  
+			'filiere':'',
+			'niveau': '',
+			'adresse':'', 
+			'matiere': '',
+			'Photo':'select photo',
+		}
+
+		widgets = {
+			'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom et Prenom',}),  
+			'gender': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Genre',}), 
+			'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Adresse Email',}), 
+			'classRooms': forms.Select(attrs={'class': 'form-select', 'placeholder': 'Choisir la Classe',}),  
+			'description': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Description',}), 
+			'teachers': forms.SelectMultiple(attrs={'class': 'form-select', 'placeholder': 'Choisir les Enseignants',}), 
+			'courses': forms.SelectMultiple(attrs={'class': 'form-control', 'placeholder': 'Choisir les Courses',}),
+			'courses': forms.SelectMultiple(attrs={'class': 'form-control', 'placeholder': 'Choisir les Courses',}),
+			'courses': forms.SelectMultiple(attrs={'class': 'form-control', 'placeholder': 'Choisir les Courses',}), 
+		}
+
+
+//define the function to add a new student views.py
+ ====>  
+ 
+from .forms import StudentForm
+from django.http import  HttpResponseRedirect
+
+def add_student(request):
+      submitted = False
+      if request.method == "POST":
+            form = StudentForm(request.POST)
+            if form.is_valid():
+                  form.save()
+            return HttpResponseRedirect('/add_student?submitted=True')
+      else:
+            form = StudentForm
+      if 'submitted' in request.GET:
+            submitted=True
+      return render(request, 'students/add_student.html', {
+        'form': form,
+        'submitted': submitted,
+        })
+
+		
+// create a route url for adding new student
+	====>		 
+	
+		path('add_student', views.add_student, name='add-student'),
+
+//create a html page templates/students/add_student.html paste these codes
+
+	====>	
+
+{%extends 'students/layout.html' %}
+
+{%block content%}
+<div class="row">
+	<div class="col-sm-2"></div>
+<div class="shadow p-4 mb-5 bg-body rounded col-md-8">
+	<center>
+
+		<h1>Ajouter un nouveau Etudiant</h1>
+	</br>
+	{% if submitted %}
+		<h1>Les Données du nouveau Etudiant ont été soumit avec succés...!</h1>
+	{% else %}
+	<form action="", method="POST">
+		{% csrf_token %}
+		{{ form.as_p}}
+
+		  <div class="d-flex justify-content-end mb-2">
+			<button type="submit" class="btn btn-primary mb-3" value="">Submit</button>
+		  </div>
+	</form>
+	{% endif %}
+	</center>
+</div>
+</div> 
+{%endblock%}
+					
+// define a link in emplates/students_list.html paste these after h3
+	====>
+	
+<div class="col-12 d-flex justify-content-end mb-2"> 
+	<a class="btn btn-primary sm " href="{% url 'add-student' %}"> Nouveau Etudiant </a>
+</div>
+		
+
+
+		
+						
+//to update student, define a function in a views
+	  ====> 
+	  
+from django.shortcuts import render, redirect
+
+def update_student(request, student_id):
+    student = Student.objects.get(pk=student_id)
+    form = StudentForm(request.POST or None, instance=student)
+    if form.is_valid():
+        form.save()
+        return redirect('students-list')
+    return render(request, 'students/update_student.html', {
+        'student': student,
+        'form': form,
+    })  
+	
+// create a route url for updating a student
+	====>
+	
+	path('update_student/<student_id>', views.update_student, name='update-student'),
+
+
+//create a html page templates/students/update_student.html paste these codes
+
+{%extends 'students/layout.html' %}
+
+{%block content%}
+<div class="row">
+    <div class="col-sm-2"></div>
+<div class="shadow p-4 mb-5 bg-body rounded col-md-8">
+    <center>
+
+        <h1>Modifier les Données de l'Etudiant</h1>
+    </br>
+    {% if submitted %}
+        <h1>Les Données de l'Etudiant ont été Modifié avec succés...!</h1>
+    {% else %}
+    <form action="", method="POST">
+        {% csrf_token %}
+        {{ form.as_p}}
+
+          <div class="d-flex justify-content-end mb-2">
+            <button type="submit" class="btn btn-primary mb-3" value="">Submit</button>
+          </div>
+    </form>
+    {% endif %}
+    </center>
+</div>
+</div> 
+{%endblock%}
+
+
+//to delete student create a function in views
+==> 
+def delete_student(request, student_id):
+    student = Student.objects.get(pk=student_id)
+    student.delete()
+    return redirect('students-list')
+
+
+// create a route url for deleting a student
+ ====>  
+	path('delete_student/<student_id>', views.delete_student, name='delete-student'),
+	
+					
+// define a link for deleting a student in emplates/students/students_list.html close to edit btn
+====>
+	<a class="btn btn-outline-danger sm" href="{% url 'delete-student' student.id %}">
+			  Delete
+	</a>
+
+
+//to display student details create a function in views
+===> 
+
+def show_student(request, student_id):
+    student = Student.objects.get(pk=student_id)
+    return render(request, 'students/show_student.html', {
+        'student': student,
+    })
+			
+// create a route url to display student details
+ ====>  
+path('show_student/<student_id>', views.show_student, name='show-student'),
+					
+// define a link in emplates/students/students_list.html close to edit btn
+====>		 
+
+<a class="btn btn-outline-info sm" href="{% url 'show-student' student.id %}">
+	Details
+</a>
+
+// create a html page templates/tudents/show_student.html to display student details and paste these codes
+====> 
+
+{%extends 'students/layout.html' %}
+
+{%block content%}
+<div class="row">
+	<div class="col-sm-2"></div>
+	
+  
+<div class="shadow p-4 mb-5 bg-body rounded col-md-8">
+	<center>
+
+		<h3>Details d'un Etudiant...</h3>
+	</br>
+	<table class="table table-bordered table-striped table-hover">
+		<tbody>            
+		  <tr class="success"> 
+			
+			<td><strong>ID: </strong>{{student.id}}</td>
+		  </tr>
+
+			<tr class="success"> 
+			<td><strong>Nom et Prenom:</strong> {{student.name}}</td>
+		  </tr>
+
+			<tr class="success"> 
+			<td><strong>Genre:</strong> {{student.gender}}</td>
+		  </tr>
+
+			<tr class="success"> 
+			<td><strong>Email:</strong> {{student.email}}</td>
+		  </tr>
+
+		  
+		  <tr class="success"> 
+			<td><strong>Classe:</strong> {{student.classRoom}}</td>
+		   </tr>
+
+			<tr class="success"> 
+			 <td><strong>Remarque:</strong> {{student.description}}</td>
+			</tr>
+		</tbody>
+	</table>
+
+	  <div class="row">
+		<div class="col-sm-4">
+	   
+		  <strong>Les Formation en cours:</strong></br>
+		{% for course in student.courses.all %}
+        <ul> 
+            <li>{{course.description}}</li>
+        </ul>
+		{% endfor %}
+		</div>
+		<div class="col-sm-8">
+			<strong>Les Formateurs:</strong></br>
+		{% for teacher in student.teachers.all %}
+        <ul>
+            <li>{{teacher.name}} -- {{teacher.email}}</li> 
+        </ul>
+		{% endfor %}
+		</div>
+	</div>
+
+	</center>
+</div>
+</div> 
+{%endblock%}
+
+//to search a student create a function in views
+==> 
+
+from django.db.models import Q
+
+def search_student(request):
+    if request.method == "GET":
+        query = request.GET.get('query')
+        if query:
+            mutiple_q = Q(Q(name__icontains=query) | Q(email__icontains=query))
+        students = Student.objects.filter(mutiple_q)
+        if students:
+            return render(request, 'students/students_list.html', {
+                'students': students
+            })
+        else:
+            print('Not found ...')
+            return render(request, 'students/not_found.html', {})
+			
+			
+// create a route url to search student details
+ ====>  
+path('search_student', views.search_student, name='search-student'),
+					
+define a link for the form search button in navbar
+====>		 
+<form class="d-flex" method="get" action="{% url 'search-student' %}">
+							...
+							.
+							.
+</form>
+						
+// create a html page for not found element templates/students/not_found.html
+====> 
+{% extends 'students/layout.html' %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-2"></div>
+	<div class="shadow p-4 mb-5 bg-body rounded col-md-8">
+		<center>
+				<h1>L'Element que vous cherchez n'existe pas...</h1>
+
+		</center>
+	</div>
+</div>
+{% endblock %}
+
+
+//***********************************************************************************************************Admin dashboard Costumising********************************************************************************************
+
+====> py manage.py startapp user
+
+// user view file
+====>
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth.forms import UserCreationForm
+from .forms import RegisterUserForm
+
+def login_user(request):
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            messages.success(request, ("Le Username ou le Password inccorecte essayez encore...!"))
+            return redirect('login')
+    else:
+        return render(request, 'login.html', {})
+
+def logout_user(request):
+    logout(request)
+    messages.success(request, ("Deconnexion...!"))
+    return redirect('login')
+
+def register_user(request):
+    if request.method == "POST":
+        form = RegisterUserForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password1']
+            user = authenticate(username=username, password=password)
+            login(request, user)
+            messages.success(request, ("Creation du compte avec succes...!"))
+            return redirect('home')
+    else:
+        form = RegisterUserForm()
+    return render(request, 'register_user.html', {
+        'form': form,
+    })
+
+// user form file
+====>
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from django import forms
+
+class RegisterUserForm(UserCreationForm):
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    first_name = forms.CharField(max_length=80, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(max_length=80, widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2')
+
+    def __init__(self, *args, **kwargs) :
+        super(RegisterUserForm, self).__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs['class'] = 'form-control'
+        self.fields['password1'].widget.attrs['class'] = 'form-control'
+        self.fields['password2'].widget.attrs['class'] = 'form-control'
+		
+//user urls file
+====>
+from django.urls import path, include
+from . import views
+
+urlpatterns = [
+    path('login_user', views.login_user, name='login'),
+    path('logout_user', views.logout_user, name='logout'),
+    path('register_user', views.register_user, name='register-user'),
+]
+
+//project urls file
+
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('students.urls')),
+]
+
+
+admin.site.site_header = "Bien Venues au systeme de gestion notre Ecole"
+
+admin.site.site_title = "systeme de gestion notre Ecole"
+
+admin.site.index_title = "Espace Administrateur"
+
+
+//user templates file login.html
+====>
+{%extends 'students/layout.html' %}
+
+{%block content%}
+<div class="shadow p-4 mb-5 bg-body rounded">
+    <center>
+        <h3>Login System</h3>
+    </center>
+        <br/>
+       
+        <div class="row">
+        <div class="col-3">
+        </div>
+        <div class="col-6">
+        
+        <form action="", method="POST">
+            {% csrf_token %}
+
+                <div class="mb-3">
+                  <label for="exampleInputEmail1" class="form-label">User Name</label>
+                  <input type="text" class="form-control" name="username" aria-describedby="emailHelp">
+                </div>
+                <div class="mb-3">
+                  <label for="exampleInputPassword1" class="form-label">Password</label></br>
+                  <input type="password" class="form-control" name="password">
+                </div>
+       
+
+            <div class="d-flex justify-content-end mb-2">
+                <button type="submit" class="btn btn-primary mb-3" value="">Submit</button>
+              </div>
+        </form>
+
+    </div>
+</div>
+    
+</div>
+{%endblock%}
+
+// user templates file register.html
+====>
+{%extends 'students/layout.html' %}
+
+{%block content%}
+<div class="shadow p-4 mb-5 bg-body rounded">
+    <center>
+        {% if form.errors %}
+
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>There was an errors with your form...</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+       
+        {% endif %}
+       
+        <h3>Register User</h3>
+    </center>
+        <br/>
+       
+        <div class="row">
+        <div class="col-3">
+        </div>
+        <div class="col-6">
+        
+        <form action="{% url 'register-user' %}", method="POST">
+            {% csrf_token %}
+            {{form.as_p}}
+            <div class="d-flex justify-content-end mb-2">
+                <button type="submit" class="btn btn-primary mb-3" value="">Submit</button>
+              </div>
+        </form>
+
+</div>
+    </div>
+</div>
+
+{%endblock%}
+
+
+
+//*****************************************Add content as user Autheticate
+====>
+{%extends 'students/layout.html' %}
+
+{%block content%}
+
+
+{%if user.is_authenticated%}
+
+
+<div class="row">
+    <div class="col-sm-2"></div>
+<div class="shadow p-4 mb-5 bg-body rounded col-md-8">
+    <center>
+
+        <h1>Ajouter un nouveau Etudiant</h1>
+    </br>
+    {% if submitted %}
+        <h1>Les Données du nouveau Etudiant ont été soumit avec succés...!</h1>
+    {% else %}
+    <form action="", method="POST">
+        {% csrf_token %}
+        {{ form.as_p}}
+
+          <div class="d-flex justify-content-end mb-2">
+            <button type="submit" class="btn btn-primary mb-3" value="">Submit</button>
+          </div>
+    </form>
+    {% endif %}
+    </center>
+</div>
+</div> 
+
+
+{%else%}
+<h1> Sorry, You must be logged in to view this page... ! </h1>
+<a href="{% url 'login' %}">Login Here...!</a>
+
+
+{%endif%}
+
+
+{%endblock%}
+
+//*****************************************Update or delete content as user Authenticate
+====>
+
+{%if user.is_authenticated%}
+
+	<a class="btn btn-outline-primary sm" href="{% url 'update-student' student.id %}">
+	  Update
+	</a>
+	<a class="btn btn-outline-danger sm" href="{% url 'delete-student' student.id %}">
+	  Delete
+	</a>
+
+{%endif%}
+
+
+
+{%extends 'students/layout.html' %}
+
+{%block content%}
+
+{%if user.is_authenticated%}
+
+<div class="row">
+    <div class="col-sm-2"></div>
+<div class="shadow p-4 mb-5 bg-body rounded col-md-8">
+    <center>
+
+        <h1>Modifier les Données de l'Etudiant</h1>
+    </br>
+    {% if submitted %}
+        <h1>Les Données de l'Etudiant ont été Modifié avec succés...!</h1>
+    {% else %}
+    <form action="", method="POST">
+        {% csrf_token %}
+        {{ form.as_p}}
+
+          <div class="d-flex justify-content-end mb-2">
+            <button type="submit" class="btn btn-primary mb-3" value="">Submit</button>
+          </div>
+    </form>
+    {% endif %}
+    </center>
+</div>
+</div> 
+
+{%else%}
+<h1> Sorry, You must be logged in to view this page... ! </h1>
+<a href="{% url 'login' %}">Login Here...!</a>
+
+
+{%endif%}
+
+{%endblock%}
+
+
+//**************************************** content owner as user Authenticate
+====>
+{%if user.is_authenticated%}
+
+	{%if user == models.ForeignKey %}
+	
+		// do here....
+	
+	{%endif%}
+	
+	{%else%}
+	<h1> Access Denied... ! </h1>
+
+{%endif%}
+
+
+
+{%if user.is_authenticated%}
+
+	{%if user == models.ForeignKey %}
+	
+	<a class="btn btn-outline-primary sm" href="{% url 'update-student' student.id %}">
+	  Update
+	</a>
+	<a class="btn btn-outline-danger sm" href="{% url 'delete-student' student.id %}">
+	  Delete
+	</a>
+	
+	{%endif%}
+{%endif%}
+
+
